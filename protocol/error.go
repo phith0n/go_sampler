@@ -19,6 +19,18 @@ var reasonMap = map[ErrReason]string{
 	ErrSample: "This is a sample error",
 }
 
+type CustomError struct {
+	Reason string
+}
+
+func (e *CustomError) Error() string {
+	return e.Reason
+}
+
+func NewCustomError(reason string) *CustomError {
+	return &CustomError{Reason: reason}
+}
+
 type ServerError struct {
 	Code   ErrReason `json:"code"`
 	Reason string    `json:"reason"`
@@ -27,8 +39,11 @@ type ServerError struct {
 func ErrorJSON(ctx *gin.Context, status int, errCode ErrReason, err error) {
 	var reason string
 	var verr validator.ValidationErrors
+	var customError *CustomError
 	if errors.As(err, &verr) && len(verr) > 0 {
 		reason = fmt.Sprintf("Validate failed on field %s due to the rule '%s'", verr[0].Field(), verr[0].Tag())
+	} else if errors.As(err, &customError) {
+		reason = err.Error()
 	} else {
 		reason = reasonMap[errCode]
 	}
