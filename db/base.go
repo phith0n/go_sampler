@@ -1,9 +1,11 @@
 package db
 
 import (
-	"go_sampler/filters"
-	"gorm.io/gorm/schema"
 	"time"
+
+	"go_sampler/filters"
+
+	"gorm.io/gorm/schema"
 )
 
 type BaseModel struct {

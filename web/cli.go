@@ -1,8 +1,9 @@
 package web
 
 import (
-	"github.com/urfave/cli/v2"
 	"go_sampler/config"
+
+	"github.com/urfave/cli/v2"
 )
 
 var WebCommand = &cli.Command{

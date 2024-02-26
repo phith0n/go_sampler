@@ -17,13 +17,13 @@ func RandomString(n int, allowedChars ...string) string {
 		letters = allowedChars[0]
 	}
 
-	randMath.Seed(time.Now().Unix())
+	r := randMath.New(randMath.NewSource(time.Now().UnixNano())) //nolint:gosec
 	var index int
 	ret := make([]byte, n)
 	for i := 0; i < n; i++ {
 		num, err := randCrypto.Int(randCrypto.Reader, big.NewInt(int64(len(letters))))
 		if err != nil {
-			index = randMath.Intn(len(letters))
+			index = r.Intn(len(letters))
 		} else {
 			index = int(num.Int64())
 		}

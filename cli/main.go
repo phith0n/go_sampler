@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/urfave/cli/v2"
+	"log"
+	"os"
+
 	"go_sampler/config"
 	"go_sampler/db"
 	"go_sampler/logging"
 	"go_sampler/web"
-	"log"
-	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli/v2"
 )
 
 var logger = logging.GetSugar()

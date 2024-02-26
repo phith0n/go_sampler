@@ -23,9 +23,5 @@ func EnsureUInt(value interface{}) uint {
 		r = 0
 	}
 
-	if uint(r) < 0 {
-		return 0
-	} else {
-		return uint(r)
-	}
+	return uint(r)
 }

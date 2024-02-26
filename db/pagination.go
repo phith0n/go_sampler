@@ -32,7 +32,7 @@ func (p *Pagination) Scopes() func(db *gorm.DB) *gorm.DB {
 	}
 }
 
-func NewPagination(c *gin.Context, defaultPageSize int, maxPageSize int) *Pagination {
+func NewPagination(c *gin.Context, defaultPageSize, maxPageSize int) *Pagination {
 	page, _ := strconv.Atoi(c.Query("page"))
 	if page == 0 {
 		page = 1

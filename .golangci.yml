@@ -77,6 +77,12 @@ linters-settings:
     excludes:
       - G307
       - G304
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: reflect
+            desc: Please don't use reflect package
 
 linters:
   disable-all: false
