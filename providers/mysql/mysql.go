@@ -1,6 +1,9 @@
-package db
+package mysql
 
 import (
+	"context"
+	"go.uber.org/fx"
+	"go_sampler/providers/config"
 	"time"
 
 	"go_sampler/logging"
@@ -18,7 +21,7 @@ type Database struct {
 
 var DB *Database
 
-func InitMysql(databaseURL string, debug bool) error {
+func NewMysql(lc fx.Lifecycle, config *config.Config) *Database {
 	gormConfig := &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 		Logger: &CustomLogger{
@@ -27,18 +30,24 @@ func InitMysql(databaseURL string, debug bool) error {
 			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
 		},
 	}
-	if debug {
+	if config.Debug {
 		gormConfig.Logger = gormConfig.Logger.LogMode(dbLogger.Info)
 	}
 
-	db, err := gorm.Open(mysql.Open(databaseURL), gormConfig)
-	if err != nil {
-		logger.Errorf("fail to connect to database: %v", err)
-		return err
-	}
+	var db = &Database{}
 
-	DB = &Database{
-		DB: db,
-	}
-	return nil
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			gdb, err := gorm.Open(mysql.Open(config.DatabaseURL), gormConfig)
+			if err != nil {
+				logger.Errorf("fail to connect to database: %v", err)
+				return err
+			}
+
+			db.DB = gdb
+			return nil
+		},
+	})
+
+	return db
 }

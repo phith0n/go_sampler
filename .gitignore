@@ -2,3 +2,4 @@ go_sampler
 /dist/
 /.idea
 /config/*.yaml
+/providers/config/*.yaml
