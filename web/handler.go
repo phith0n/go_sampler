@@ -1,16 +1,15 @@
 package web
 
 import (
-	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	"go_sampler/logging"
+	sloggin "github.com/samber/slog-gin"
 	"go_sampler/providers/config"
-	"time"
+	"log/slog"
 )
 
-func NewHandler(config *config.Config) *gin.Engine {
+func NewHandler(logger *slog.Logger, config *config.Config) *gin.Engine {
 	r := gin.New()
-	r.Use(ginzap.Ginzap(logging.GetLogger(), time.RFC3339, false), gin.Recovery())
+	r.Use(sloggin.New(logger), gin.Recovery())
 	r.GET("/ping", func(c *gin.Context) {
 		c.Data(200, "text/plain", []byte("pong"))
 	})

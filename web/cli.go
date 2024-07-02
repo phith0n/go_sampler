@@ -4,7 +4,9 @@ import (
 	"github.com/urfave/cli/v2"
 	"go.uber.org/fx"
 	"go_sampler/providers/config"
+	"go_sampler/providers/logging"
 	"go_sampler/providers/mysql"
+	"log/slog"
 	"net/http"
 )
 
@@ -17,28 +19,22 @@ var WebCommand = &cli.Command{
 		configFilename := c.String("config")
 
 		fx.New(
-			fx.Provide(fx.Annotated{
-				Name: "listen",
-				Target: func() string {
-					return listen
-				},
+			fx.Provide(func() (*config.Config, error) {
+				if cfg, err := config.NewConfig(configFilename); err != nil {
+					return nil, err
+				} else {
+					if listen != "" {
+						cfg.WebAddr = listen
+					}
+					if debug {
+						cfg.Debug = true
+					}
+					return cfg, nil
+				}
 			}),
-			fx.Provide(fx.Annotated{
-				Name: "debug",
-				Target: func() bool {
-					return debug
-				},
-			}),
-			fx.Provide(fx.Annotated{
-				Name: "config",
-				Target: func() string {
-					return configFilename
-				},
-			}),
-			fx.Provide(config.NewConfig, mysql.NewMysql, NewWebServer, NewHandler),
-			fx.Invoke(func(*http.Server) {
-
-			})).Run()
+			fx.Provide(logging.NewLogging, mysql.NewMysql, NewHandler, NewWebServer),
+			fx.Invoke(func(*slog.Logger, *http.Server) {}),
+		).Run()
 		return nil
 	},
 	Flags: []cli.Flag{
