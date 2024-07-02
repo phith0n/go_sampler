@@ -1,13 +1,15 @@
 package web
 
 import (
-	"github.com/urfave/cli/v2"
-	"go.uber.org/fx"
+	"log/slog"
+	"net/http"
+
 	"go_sampler/providers/config"
 	"go_sampler/providers/logging"
 	"go_sampler/providers/mysql"
-	"log/slog"
-	"net/http"
+
+	"github.com/urfave/cli/v2"
+	"go.uber.org/fx"
 )
 
 var WebCommand = &cli.Command{

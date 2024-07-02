@@ -1,15 +1,16 @@
 package logging
 
 import (
-	"go_sampler/providers/config"
 	"log/slog"
 	"os"
+
+	"go_sampler/providers/config"
 )
 
-func NewLogging(config *config.Config) *slog.Logger {
+func NewLogging(cfg *config.Config) *slog.Logger {
 	var log *slog.Logger
 	options := slog.HandlerOptions{AddSource: true, Level: slog.LevelInfo}
-	if config.Debug {
+	if cfg.Debug {
 		options.Level = slog.LevelDebug
 		log = slog.New(slog.NewJSONHandler(os.Stderr, &options))
 	} else {
