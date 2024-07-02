@@ -1,9 +1,10 @@
-package db
+package mysql
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"gorm.io/gorm"
@@ -12,6 +13,7 @@ import (
 )
 
 type CustomLogger struct {
+	logger                    *slog.Logger
 	BaseLevel                 dbLogger.LogLevel
 	SlowThreshold             time.Duration
 	IgnoreRecordNotFoundError bool
@@ -25,19 +27,19 @@ func (l *CustomLogger) LogMode(level dbLogger.LogLevel) dbLogger.Interface {
 
 func (l *CustomLogger) Info(ctx context.Context, s string, i ...interface{}) {
 	if l.BaseLevel >= dbLogger.Info {
-		logger.Infof(s, i...)
+		l.logger.Info(fmt.Sprintf(s, i...))
 	}
 }
 
 func (l *CustomLogger) Warn(ctx context.Context, s string, i ...interface{}) {
 	if l.BaseLevel >= dbLogger.Warn {
-		logger.Warnf(s, i...)
+		l.logger.Warn(fmt.Sprintf(s, i...))
 	}
 }
 
 func (l *CustomLogger) Error(ctx context.Context, s string, i ...interface{}) {
 	if l.BaseLevel >= dbLogger.Error {
-		logger.Errorf(s, i...)
+		l.logger.Error(fmt.Sprintf(s, i...))
 	}
 }
 

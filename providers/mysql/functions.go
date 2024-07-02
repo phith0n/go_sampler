@@ -1,20 +1,12 @@
-package db
+package mysql
 
 import (
-	"time"
-
 	"go_sampler/filters"
 
 	"gorm.io/gorm/schema"
 )
 
-type BaseModel struct {
-	ID             uint      `json:"id" gorm:"column:id;not null;primaryKey;autoIncrement;"`
-	CreatedTime    time.Time `json:"created_time" gorm:"column:created_time;autoCreateTime;"`
-	LastModifyTime time.Time `json:"last_modify_time" gorm:"column:last_modify_time;autoUpdateTime;"`
-}
-
-func ModelWalk[T schema.Tabler](callback func(vuln T) error) error {
+func Walk[T schema.Tabler](callback func(vuln T) error) error {
 	var model *T
 	queryset := DB.Model(&model).Order("id asc")
 	var pos = 0
@@ -42,7 +34,7 @@ func ModelWalk[T schema.Tabler](callback func(vuln T) error) error {
 	return nil
 }
 
-func ModelList[T schema.Tabler](pagination *Pagination, filter filters.Filter) ([]T, error) {
+func List[T schema.Tabler](pagination *Pagination, filter filters.Filter) ([]T, error) {
 	var model T
 	queryset := DB.Model(model)
 	filter.Filter(queryset)
@@ -56,20 +48,20 @@ func ModelList[T schema.Tabler](pagination *Pagination, filter filters.Filter) (
 	return objs, err
 }
 
-func ModelFirst[T schema.Tabler](where string, args ...any) (obj T, err error) {
+func First[T schema.Tabler](where string, args ...any) (obj T, err error) {
 	var p = []any{where}
 	p = append(p, args...)
 	err = DB.Model(&obj).First(&obj, p...).Error
 	return obj, err
 }
 
-func ModelDelete[T schema.Tabler](where string, args ...any) error {
+func Delete[T schema.Tabler](where string, args ...any) error {
 	var model T
 	var p = []any{where}
 	p = append(p, args...)
 	return DB.Delete(&model, p...).Error
 }
 
-func ModelSave[T schema.Tabler](obj T) error {
+func Save[T schema.Tabler](obj T) error {
 	return DB.Save(obj).Error
 }

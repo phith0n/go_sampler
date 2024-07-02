@@ -1,9 +1,15 @@
 package web
 
 import (
-	"go_sampler/config"
+	"log/slog"
+	"net/http"
+
+	"go_sampler/providers/config"
+	"go_sampler/providers/logging"
+	"go_sampler/providers/mysql"
 
 	"github.com/urfave/cli/v2"
+	"go.uber.org/fx"
 )
 
 var WebCommand = &cli.Command{
@@ -11,11 +17,27 @@ var WebCommand = &cli.Command{
 	Usage: "start the webserver",
 	Action: func(c *cli.Context) error {
 		listen := c.String("listen")
-		if listen != "" {
-			config.GlobalConfig.WebAddr = listen
-		}
+		debug := c.Bool("debug")
+		configFilename := c.String("config")
 
-		return StartGin(config.GlobalConfig.WebAddr)
+		fx.New(
+			fx.Provide(func() (*config.Config, error) {
+				if cfg, err := config.NewConfig(configFilename); err != nil {
+					return nil, err
+				} else {
+					if listen != "" {
+						cfg.WebAddr = listen
+					}
+					if debug {
+						cfg.Debug = true
+					}
+					return cfg, nil
+				}
+			}),
+			fx.Provide(logging.NewLogging, mysql.NewMysql, NewHandler, NewWebServer),
+			fx.Invoke(func(*slog.Logger, *http.Server) {}),
+		).Run()
+		return nil
 	},
 	Flags: []cli.Flag{
 		&cli.StringFlag{
