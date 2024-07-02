@@ -20,7 +20,8 @@ var WebCommand = &cli.Command{
 		debug := c.Bool("debug")
 		configFilename := c.String("config")
 
-		fx.New(
+		app := fx.New(
+			fx.NopLogger,
 			fx.Provide(func() (*config.Config, error) {
 				if cfg, err := config.NewConfig(configFilename); err != nil {
 					return nil, err
@@ -36,7 +37,12 @@ var WebCommand = &cli.Command{
 			}),
 			fx.Provide(logging.NewLogging, mysql.NewMysql, NewHandler, NewWebServer),
 			fx.Invoke(func(*slog.Logger, *http.Server) {}),
-		).Run()
+		)
+		if err := app.Err(); err != nil {
+			return cli.Exit(err, 1)
+		}
+
+		app.Run()
 		return nil
 	},
 	Flags: []cli.Flag{
