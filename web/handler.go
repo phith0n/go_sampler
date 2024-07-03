@@ -17,9 +17,28 @@ func NewHandler(logger *slog.Logger, cfg *config.Config) *gin.Engine {
 	}
 
 	r := gin.New()
-	r.Use(sloggin.New(logger), gin.Recovery())
+	r.Use(newLoggerMiddleware(logger), gin.Recovery())
 	r.GET("/ping", func(c *gin.Context) {
 		c.Data(200, "text/plain", []byte("pong"))
 	})
 	return r
+}
+
+func newLoggerMiddleware(logger *slog.Logger) gin.HandlerFunc {
+	return sloggin.NewWithConfig(logger, sloggin.Config{
+		DefaultLevel:     slog.LevelInfo,
+		ClientErrorLevel: slog.LevelInfo,
+		ServerErrorLevel: slog.LevelError,
+
+		WithUserAgent:      true,
+		WithRequestID:      true,
+		WithRequestBody:    false,
+		WithRequestHeader:  false,
+		WithResponseBody:   false,
+		WithResponseHeader: false,
+		WithSpanID:         false,
+		WithTraceID:        false,
+
+		Filters: []sloggin.Filter{},
+	})
 }
