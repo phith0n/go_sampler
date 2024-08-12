@@ -35,7 +35,8 @@ var WebCommand = &cli.Command{
 					return cfg, nil
 				}
 			}),
-			fx.Provide(logging.NewLogging, mysql.NewMysql, NewHandler, NewWebServer),
+			fx.Provide(logging.NewLogging, mysql.NewMysql),
+			fx.Provide(NewAPI, NewHandler, NewWebServer),
 			fx.Invoke(func(*slog.Logger, *http.Server) {}),
 		)
 		if err := app.Err(); err != nil {

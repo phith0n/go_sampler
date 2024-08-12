@@ -9,7 +9,7 @@ import (
 	sloggin "github.com/samber/slog-gin"
 )
 
-func NewHandler(logger *slog.Logger, cfg *config.Config) *gin.Engine {
+func NewHandler(logger *slog.Logger, cfg *config.Config, api *APIHandler) *gin.Engine {
 	if cfg.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -18,9 +18,7 @@ func NewHandler(logger *slog.Logger, cfg *config.Config) *gin.Engine {
 
 	r := gin.New()
 	r.Use(newLoggerMiddleware(logger), gin.Recovery())
-	r.GET("/ping", func(c *gin.Context) {
-		c.Data(200, "text/plain", []byte("pong"))
-	})
+	r.GET("/ping", api.PingHandler)
 	return r
 }
 

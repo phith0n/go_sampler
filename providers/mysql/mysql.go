@@ -1,13 +1,11 @@
 package mysql
 
 import (
-	"context"
 	"log/slog"
 	"time"
 
 	"go_sampler/providers/config"
 
-	"go.uber.org/fx"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	dbLogger "gorm.io/gorm/logger"
@@ -15,11 +13,13 @@ import (
 
 type Database struct {
 	*gorm.DB
+
+	Config *config.Config
 }
 
 var DB *Database
 
-func NewMysql(lc fx.Lifecycle, cfg *config.Config, logger *slog.Logger) *Database {
+func NewMysql(cfg *config.Config, logger *slog.Logger) (*Database, error) {
 	gormConfig := &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 		Logger: &CustomLogger{
@@ -33,20 +33,14 @@ func NewMysql(lc fx.Lifecycle, cfg *config.Config, logger *slog.Logger) *Databas
 		gormConfig.Logger = gormConfig.Logger.LogMode(dbLogger.Info)
 	}
 
-	var db = &Database{}
+	var err error
+	var db = &Database{Config: cfg}
+	db.DB, err = gorm.Open(mysql.Open(cfg.DatabaseURL), gormConfig)
+	if err != nil {
+		slog.Error("fail to connect to database", "error", err)
+		return nil, err
+	}
 
-	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
-			gdb, err := gorm.Open(mysql.Open(cfg.DatabaseURL), gormConfig)
-			if err != nil {
-				slog.Error("fail to connect to database", "error", err)
-				return err
-			}
-
-			db.DB = gdb
-			return nil
-		},
-	})
-
-	return db
+	DB = db
+	return db, nil
 }

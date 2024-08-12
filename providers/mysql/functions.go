@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-func Walk[T schema.Tabler](callback func(vuln T) error) error {
+func Walk[T schema.Tabler](callback func(obj T) error) error {
 	var model *T
 	queryset := DB.Model(&model).Order("id asc")
 	var pos = 0
@@ -43,8 +43,24 @@ func List[T schema.Tabler](pagination *Pagination, filter filters.Filter) ([]T, 
 		return nil, err
 	}
 
-	var objs []T
+	var objs = make([]T, 0)
 	err := queryset.Scopes(pagination.Scopes()).Find(&objs).Error
+	return objs, err
+}
+
+func ListAll[T schema.Tabler](where, orderBy string, args ...any) ([]T, error) {
+	var model T
+	var objs = make([]T, 0)
+	query := DB.Model(model)
+	if where != "" {
+		query.Where(where, args...)
+	}
+
+	if orderBy != "" {
+		query.Order(orderBy)
+	}
+
+	err := query.Find(&objs).Error
 	return objs, err
 }
 
@@ -53,6 +69,17 @@ func First[T schema.Tabler](where string, args ...any) (obj T, err error) {
 	p = append(p, args...)
 	err = DB.Model(&obj).First(&obj, p...).Error
 	return obj, err
+}
+
+func Exist[T schema.Tabler](where string, args ...any) bool {
+	_, err := First[T](where, args...)
+	return err == nil
+}
+
+func Count[T schema.Tabler](where string, args ...any) (cnt int64) {
+	var obj T
+	DB.Model(&obj).Where(where, args...).Count(&cnt)
+	return cnt
 }
 
 func Delete[T schema.Tabler](where string, args ...any) error {
@@ -64,4 +91,8 @@ func Delete[T schema.Tabler](where string, args ...any) error {
 
 func Save[T schema.Tabler](obj T) error {
 	return DB.Save(obj).Error
+}
+
+func Create[T schema.Tabler](obj T) error {
+	return DB.Create(obj).Error
 }
