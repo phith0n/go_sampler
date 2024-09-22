@@ -1,4 +1,4 @@
-package mysql
+package db
 
 type UserTab struct {
 	BaseModel
