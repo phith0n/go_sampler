@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"go_sampler/providers/config"
+	"go_sampler/providers/db"
 	"go_sampler/providers/logging"
-	"go_sampler/providers/mysql"
 
 	"github.com/urfave/cli/v2"
 	"go.uber.org/fx"
@@ -35,7 +35,7 @@ var WebCommand = &cli.Command{
 					return cfg, nil
 				}
 			}),
-			fx.Provide(logging.NewLogging, mysql.NewMysql),
+			fx.Provide(logging.New, db.NewPostgres),
 			fx.Provide(NewAPI, NewHandler, NewWebServer),
 			fx.Invoke(func(*slog.Logger, *http.Server) {}),
 		)
