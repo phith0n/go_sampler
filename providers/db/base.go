@@ -1,6 +1,7 @@
 package db
 
 import (
+	"gorm.io/gorm"
 	"log/slog"
 	"time"
 
@@ -77,9 +78,9 @@ func (c *QueryChain[T]) Filter(f filters.Filter) *QueryChain[T] {
 
 func (c *QueryChain[T]) First() (obj T, err error) {
 	tx := DB.Model(&obj)
-	for _, w := range c.wheres {
-		tx.Where(w.where, w.args...)
-	}
+	c.handleWhere(tx)
+	c.handleOrder(tx)
+	c.handleOffset(tx)
 
 	err = tx.First(&obj).Error
 	return obj, err
@@ -93,9 +94,9 @@ func (c *QueryChain[T]) Exist() bool {
 func (c *QueryChain[T]) Count() (cnt int64) {
 	var obj T
 	tx := DB.Model(&obj)
-	for _, w := range c.wheres {
-		tx.Where(w.where, w.args...)
-	}
+	c.handleWhere(tx)
+	c.handleOffset(tx)
+	c.handleLimit(tx)
 
 	tx.Count(&cnt)
 	return cnt
@@ -104,9 +105,7 @@ func (c *QueryChain[T]) Count() (cnt int64) {
 func (c *QueryChain[T]) Delete() error {
 	var obj T
 	tx := DB.Model(&obj)
-	for _, w := range c.wheres {
-		tx.Where(w.where, w.args...)
-	}
+	c.handleWhere(tx)
 
 	return tx.Delete(&obj).Error
 }
@@ -115,17 +114,9 @@ func (c *QueryChain[T]) List() ([]T, error) {
 	var model T
 	tx := DB.Model(model)
 
-	for _, w := range c.wheres {
-		tx.Where(w.where, w.args...)
-	}
-
-	for _, orderBy := range c.orders {
-		tx.Order(orderBy)
-	}
-
-	if c.filter != nil {
-		c.filter.Filter(tx)
-	}
+	c.handleWhere(tx)
+	c.handleOrder(tx)
+	c.handleFilter(tx)
 
 	if c.pagination != nil {
 		if err := c.pagination.CountTotal(tx); err != nil {
@@ -134,13 +125,8 @@ func (c *QueryChain[T]) List() ([]T, error) {
 
 		tx.Scopes(c.pagination.Scopes())
 	} else {
-		if c.offset > 0 {
-			tx.Offset(c.offset)
-		}
-
-		if c.limit > 0 {
-			tx.Limit(c.limit)
-		}
+		c.handleOffset(tx)
+		c.handleLimit(tx)
 	}
 
 	var objs = make([]T, 0)
@@ -192,6 +178,36 @@ func (c *QueryChain[T]) Walk(callback func(obj T) error) error {
 	}
 
 	return nil
+}
+
+func (c *QueryChain[T]) handleWhere(tx *gorm.DB) {
+	for _, w := range c.wheres {
+		tx.Where(w.where, w.args...)
+	}
+}
+
+func (c *QueryChain[T]) handleOrder(tx *gorm.DB) {
+	for _, orderBy := range c.orders {
+		tx.Order(orderBy)
+	}
+}
+
+func (c *QueryChain[T]) handleFilter(tx *gorm.DB) {
+	if c.filter != nil {
+		c.filter.Filter(tx)
+	}
+}
+
+func (c *QueryChain[T]) handleLimit(tx *gorm.DB) {
+	if c.limit > 0 {
+		tx.Limit(c.limit)
+	}
+}
+
+func (c *QueryChain[T]) handleOffset(tx *gorm.DB) {
+	if c.offset > 0 {
+		tx.Offset(c.offset)
+	}
 }
 
 func Save[T schema.Tabler](obj T) error {
