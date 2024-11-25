@@ -48,10 +48,10 @@ var WebCommand = &cli.Command{
 	},
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:    "listen",
-			Aliases: []string{"l"},
-			Usage:   "listen address",
-			Value:   ":8080",
+			Name:     "listen",
+			Aliases:  []string{"l"},
+			Usage:    "listen address",
+			Required: false,
 		},
 	},
 }
